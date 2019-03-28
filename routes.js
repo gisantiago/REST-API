@@ -20,6 +20,16 @@ router.param("_id", (req, res, next, id) => {
     });
 });
 
+router.param("_id", (req, res, next) => {
+    req.course = req.course.id(id);
+    if(!req.course) {
+        err = new Error("Not Found");
+        err.status = 404;
+        return next(err);
+    }
+    next();
+});
+
 
 
 /*****************************************************************
@@ -79,10 +89,24 @@ router.post("/courses", (req, res, next) => {
     });
 });
 
+//PUT: /api/course/:id 200
+//Route to updates a course
+router.put("/courses/:id", (req, res, next) => {
+    req.course.update(req.body, (err, result) => {
+        if(err) return next(err);
+        res.json(course);
+    });
+});
 
-
-
-
-
+//DELETE: /api/course/:id 200
+//Route that deletes courses
+router.post("/courses/:id", (req, res, next) => {
+    req.course.remove((err) => {
+        req.course.save( (err, course) => {
+            if(err) return next(err);
+            res.json(course);
+        });
+    });
+});
 
 module.exports = router;
