@@ -7,7 +7,7 @@ const User = require("./models").User;
 const Course = require("./models").Course;
 
 
-router.param("_id", (req, res, next, id) => {
+router.param("id", (req, res, next, id) => {
     Course.findById(id, (err, doc) => {
         if(err) return next(err);
         if(!doc) {
