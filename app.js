@@ -4,6 +4,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const routes = require('./routes');
+const bodyParser = require('body-parser').json;
 
 //Mongoose connector
 const mongoose = require('mongoose');
@@ -29,9 +30,11 @@ const app = express();
 
 // setup morgan which gives us http request logging
 app.use(morgan('dev'));
+// setup bodyParser
+app.use(bodyParser());
 
 // TODO setup your api routes here
-app.use("/", routes); 
+app.use("/api", routes); 
 
 
 // setup a friendly greeting for the root route
