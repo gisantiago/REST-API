@@ -15,9 +15,9 @@ const UserSchema = new Schema({
 }); 
 
 
-UserSchema.pre("save", (next) => {
-    next();
-});
+// UserSchema.pre("save", (next) => {
+//     next();
+// });
 
 const CourseSchema = new Schema({
     user:               {type: ObjectId, ref: 'User'},

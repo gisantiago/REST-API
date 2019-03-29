@@ -45,14 +45,27 @@ const lnameValidator = check('lastName')
   .withMessage('Please enter the last name');
 
 //Email Validator
-const emailValidator = check('email')
+const emailValidator = check('emailAddress')
   .exists({ checkNull: true, checkFalsy: true })
   .withMessage('Please enter a valid email');
 
 //Password Validator
 const pwdValidator = check('password')
   .exists({ checkNull: true, checkFalsy: true })
-  .withMessage('Please enter the last name');
+  .withMessage('Please enter a password name');
+
+// ****** Courses Validator **********
+
+//Title Validator
+const titleValidator = check('title')
+  .exists({ checkNull: true, checkFalsy: true })
+  .withMessage('Please enter the course\'s title');
+
+//Description Validator
+const dscpValidator = check('description')
+  .exists({ checkNull: true, checkFalsy: true })
+  .withMessage('Please enter a description for the course');
+  
 
 
 /*****************************************************************
@@ -70,21 +83,21 @@ router.get("/users", (req, res, next) => {
 
 //POST: /api/users 201
 //Route for creating a user -- with fields validators
-router.post("/users", fnameValidator, lnameValidator, emailValidator, pwdValidator, (req, res, next) => {
-    //const user = new User(req.body);
+router.post("/users", [fnameValidator, lnameValidator, emailValidator, pwdValidator], (req, res, next) => {
     const errors = validationResult(req);
-   // user.save( (errors, user) => {
-        //if(err) return next(err);
-        if ( !errors.isEmpty() ) {
-            const errorMessages = errors.array().map(error => error.msg);
-            return res.status(400).json({ errors: errorMessages });
-        }
-        const user = req.body;
-        users.push(user);
-        return res.status(201).end();
-       // res.status(201);
-       // res.json(user);
-    //});
+    const user = new User(req.body);
+    if ( !errors.isEmpty() ) {
+        const errorMessages = errors.array().map(error => error.msg);
+        return res.status(400).json({ errors: errorMessages });
+    }
+    // const user = req.body;
+    // users.push(user);
+    // return res.status(201).end();
+    user.save( (err, user) => {
+        if(err) return next(err);
+        res.status(201);
+        res.json(user);
+    });
 });
 
 
@@ -110,9 +123,14 @@ router.get("/courses/:id", (req, res, next) => {
 
 
 //POST: /api/courses 201
-//Route for creating a course
-router.post("/courses", (req, res, next) => {
+//Route for creating a course --- with validators for the title and description
+router.post("/courses", [titleValidator, dscpValidator], (req, res, next) => {
+    const errors = validationResult(req);
     const course = new Course(req.body);
+    if ( !errors.isEmpty() ) {
+        const errorMessages = errors.array().map(error => error.msg);
+        return res.status(400).json({ errors: errorMessages });
+    }
     course.save( (err, course) => {
         if(err) return next(err);
         res.status(201);
