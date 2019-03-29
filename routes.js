@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const User = require("./models").User;
 const Course = require("./models").Course;
+const { check, validationResult } = require('express-validator/check');
 
 
 router.param("id", (req, res, next, id) => {
@@ -31,6 +32,28 @@ router.param("_id", (req, res, next) => {
 });
 
 
+// ****** Users Validator **********
+
+//First Name Validator
+const fnameValidator = check('firstName')
+  .exists({ checkNull: true, checkFalsy: true })
+  .withMessage('Please enter the first name');
+
+//Last Name Validator
+const lnameValidator = check('lastName')
+  .exists({ checkNull: true, checkFalsy: true })
+  .withMessage('Please enter the last name');
+
+//Email Validator
+const emailValidator = check('email')
+  .exists({ checkNull: true, checkFalsy: true })
+  .withMessage('Please enter a valid email');
+
+//Password Validator
+const pwdValidator = check('password')
+  .exists({ checkNull: true, checkFalsy: true })
+  .withMessage('Please enter the last name');
+
 
 /*****************************************************************
  *  USERS ROUTES
@@ -46,14 +69,22 @@ router.get("/users", (req, res, next) => {
 });
 
 //POST: /api/users 201
-//Route for creating a user
-router.post("/users", (req, res, next) => {
-    const user = new User(req.body);
-    user.save( (err, user) => {
-        if(err) return next(err);
-        res.status(201);
-        res.json(user);
-    });
+//Route for creating a user -- with fields validators
+router.post("/users", fnameValidator, lnameValidator, emailValidator, pwdValidator, (req, res, next) => {
+    //const user = new User(req.body);
+    const errors = validationResult(req);
+   // user.save( (errors, user) => {
+        //if(err) return next(err);
+        if ( !errors.isEmpty() ) {
+            const errorMessages = errors.array().map(error => error.msg);
+            return res.status(400).json({ errors: errorMessages });
+        }
+        const user = req.body;
+        users.push(user);
+        return res.status(201).end();
+       // res.status(201);
+       // res.json(user);
+    //});
 });
 
 
