@@ -6,6 +6,8 @@ const router = express.Router();
 const User = require("./models").User;
 const Course = require("./models").Course;
 const { check, validationResult } = require('express-validator/check');
+const bcryptjs = require('bcryptjs');
+const auth = require('basic-auth');
 
 
 router.param("id", (req, res, next, id) => {
@@ -67,13 +69,47 @@ const dscpValidator = check('description')
   .withMessage('Please enter a description for the course');
   
 
+/******* Function to authenticate uers ********/
+const authenticateUser = (req, res, next) =>{
+    let message = null;
+
+    const credentials = auth(req);
+
+    if (credentials) {
+        const user = users.find( u => u.username === credentials.name);
+
+        if (user) {
+            const authenticated = bcryptjs
+                .compareSych(credentials.pass, user.password);
+
+            if (authenticated) {
+                console.log(`Authentication successful for username: ${user.username}`)
+                req.currentUser = user;
+            } else {
+                message = `Authentication failure for username ${user.username}`;
+            }
+        } else {
+            message = `User not found for username: ${credentials.name}`;
+        }
+    } else {
+        message = 'Auth header not found';
+    }
+
+    if (message) {
+        console.warn(message);
+
+        res.status(401).json( { message: 'Access Denied' } );
+    } else {
+        next();
+    }
+};
 
 /*****************************************************************
  *  USERS ROUTES
 ****************************************************************/
 
 //GET: /api/users 200 --- All Users
-router.get("/users", (req, res, next) => {
+router.get("/users", authenticateUser, (req, res, next) => {
     User.find({})
                 .exec((err, users) => {
                     if(err) return next(err);
@@ -86,6 +122,9 @@ router.get("/users", (req, res, next) => {
 router.post("/users", [fnameValidator, lnameValidator, emailValidator, pwdValidator], (req, res, next) => {
     const errors = validationResult(req);
     const user = new User(req.body);
+    // Hash the new user's password.
+    user.password = bcryptjs.hashSync(user.password);
+
     if ( !errors.isEmpty() ) {
         const errorMessages = errors.array().map(error => error.msg);
         return res.status(400).json({ errors: errorMessages });
