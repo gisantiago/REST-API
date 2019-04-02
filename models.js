@@ -24,7 +24,8 @@ const CourseSchema = new Schema({
     title:              String,
     description:        String,
     estimatedTime:      String,
-    materialsNeeded:    String
+    materialsNeeded:    String,
+    url:                String
 });
 
 CourseSchema.method("update", (updates, callback) => {

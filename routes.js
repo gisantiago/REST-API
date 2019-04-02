@@ -70,23 +70,26 @@ const dscpValidator = check('description')
   
 
 /******* Function to authenticate uers ********/
-const authenticateUser = (req, res, next) =>{
+const authenticateUser = async (req, res, next) =>{
     let message = null;
 
     const credentials = auth(req);
 
     if (credentials) {
-        const user = users.find( u => u.username === credentials.name);
+       
+        const user = await User.findOne( {emailAddress: credentials.name} );
 
         if (user) {
+            console.log(typeof credentials.pass)
+            console.log(typeof user.password)
             const authenticated = bcryptjs
-                .compareSych(credentials.pass, user.password);
+                .compareSync(credentials.pass, user.password);
 
             if (authenticated) {
-                console.log(`Authentication successful for username: ${user.username}`)
+                console.log(`Authentication successful for username: ${user.emailAddress}`)
                 req.currentUser = user;
             } else {
-                message = `Authentication failure for username ${user.username}`;
+                message = `Authentication failure for username ${user.emailAddress}`;
             }
         } else {
             message = `User not found for username: ${credentials.name}`;
@@ -104,18 +107,33 @@ const authenticateUser = (req, res, next) =>{
     }
 };
 
+
+
 /*****************************************************************
  *  USERS ROUTES
 ****************************************************************/
 
-//GET: /api/users 200 --- All Users
-router.get("/users", authenticateUser, (req, res, next) => {
-    User.find({})
-                .exec((err, users) => {
-                    if(err) return next(err);
-                    res.json(users);
-                });
+// Route that returns the current authenticated user.
+router.get('/users', authenticateUser, (req, res) => {
+    const user = req.currentUser;
+  
+    res.json({
+        user_id: user._id,
+        firstName: user.firstName,
+        lastName:  user.lastName,
+        emailAddress: user.emailAddress,
+        password: user.password 
+    });
 });
+
+//GET: /api/users 200 --- All Users
+// router.get("/users", (req, res, next) => {
+//     User.find({})
+//                 .exec((err, users) => {
+//                     if(err) return next(err);
+//                     res.json(users);
+//                 });
+// });
 
 //POST: /api/users 201
 //Route for creating a user -- with fields validators
@@ -134,8 +152,9 @@ router.post("/users", [fnameValidator, lnameValidator, emailValidator, pwdValida
     // return res.status(201).end();
     user.save( (err, user) => {
         if(err) return next(err);
+        res.location("/");
         res.status(201);
-        res.json(user);
+        res.json();
     });
 });
 
@@ -170,29 +189,35 @@ router.post("/courses", [titleValidator, dscpValidator], (req, res, next) => {
         const errorMessages = errors.array().map(error => error.msg);
         return res.status(400).json({ errors: errorMessages });
     }
+    // Set the location to the course's uri and return no content
     course.save( (err, course) => {
         if(err) return next(err);
+        res.location(req.body.url);
         res.status(201);
-        res.json(course);
+        res.json();
     });
 });
 
 //PUT: /api/course/:id 200
-//Route to updates a course
+//Route to updates a course and return no content 
 router.put("/courses/:id", (req, res, next) => {
-    req.course.update(req.body, (err, result) => {
+    Course.findOneAndUpdate(req.params.id, {$set:req.body}, (err, result) => {
         if(err) return next(err);
-        res.json(course);
-    });
+        res.status(204);
+        res.json();
+    })
 });
 
 //DELETE: /api/course/:id 200
 //Route that deletes courses
-router.post("/courses/:id", (req, res, next) => {
+router.delete("/courses/:id", (req, res, next) => {
     req.course.remove((err) => {
+
+        //return no content
         req.course.save( (err, course) => {
             if(err) return next(err);
-            res.json(course);
+            res.status(204);
+            res.json();
         });
     });
 });
