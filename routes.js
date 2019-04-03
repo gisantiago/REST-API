@@ -8,6 +8,7 @@ const Course = require("./models").Course;
 const { check, validationResult } = require('express-validator/check');
 const bcryptjs = require('bcryptjs');
 const auth = require('basic-auth');
+// const {isEmail} = require('validator');
 
 
 router.param("id", (req, res, next, id) => {
@@ -47,9 +48,11 @@ const lnameValidator = check('lastName')
   .withMessage('Please enter the last name');
 
 //Email Validator
-const emailValidator = check('emailAddress')
-  .exists({ checkNull: true, checkFalsy: true })
-  .withMessage('Please enter a valid email');
+const emailValidator = check('emailAddress', 'Please enter a valid email')
+    .not()
+    .isEmpty()
+    .isEmail()
+    .normalizeEmail();
 
 //Password Validator
 const pwdValidator = check('password')
@@ -200,26 +203,48 @@ router.post("/courses", [titleValidator, dscpValidator], (req, res, next) => {
 
 //PUT: /api/course/:id 200
 //Route to updates a course and return no content 
-router.put("/courses/:id", (req, res, next) => {
-    Course.findOneAndUpdate(req.params.id, {$set:req.body}, (err, result) => {
-        if(err) return next(err);
-        res.status(204);
-        res.json();
-    })
+router.put("/courses/:id", authenticateUser, (req, res, next) => {
+    const currUser = req.currentUser.id;
+    const courseUser = req.course.user;
+    // Testing for equality
+    // const isEql = currUser == courseUser;
+    // console.log("Current User: " + currUser);
+    // console.log("courseUser: " + courseUser);
+    // console.log(isEql);
+
+    if (currUser == courseUser) {
+        Course.findOneAndUpdate(req.params.id, {$set:req.body}, (err, result) => {
+            if(err) return next(err);
+            res.status(204);
+            res.json();
+        });
+    } else {
+        const err = new Error('You do not have permissions to update this course');
+        err.status = 403;
+        return next(err);
+    }
 });
 
 //DELETE: /api/course/:id 200
 //Route that deletes courses
 router.delete("/courses/:id", (req, res, next) => {
-    req.course.remove((err) => {
+    const currUser = req.currentUser.id;
+    const courseUser = req.course.user;
 
-        //return no content
-        req.course.save( (err, course) => {
-            if(err) return next(err);
-            res.status(204);
-            res.json();
+    if (currUser == courseUser) {
+        req.course.remove((err) => {
+            //return no content
+            req.course.save( (err, course) => {
+                if(err) return next(err);
+                res.status(204);
+                res.json();
+            });
         });
-    });
+    } else {
+        const err = new Error('You do not have permissions to update this course');
+        err.status = 403;
+        return next(err);
+    }
 });
 
 module.exports = router;
