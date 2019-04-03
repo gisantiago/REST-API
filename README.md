@@ -8,7 +8,7 @@
 
 ###### Ensure that a user can only edit and delete their own courses
 - Added if/else statements to test for current user's ID Course's user's ID equality. ---- routes.js ( lines: if/else statements in router.put() and router.delete() )
-- if authenticated user tries to update/delete a course not owned by him/her, an error messsage will appaer and throw a status 403.
+- if authenticated user tries to update/delete a course not owned by him/her, an error messsage will appear and throw a status 403.
 
 ###### Course routes
 - Using Mongoose deep population to return only the firstName and lastName properties of the related user on the course model ---- routes.js ( lines: 171 and 183)
