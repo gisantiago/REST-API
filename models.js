@@ -32,8 +32,8 @@ CourseSchema.method("update", (updates, callback) => {
 });
 
 // User/Course models definition
-const User = mongoose.model("User", UserSchema);
-const Course = mongoose.model("Course", CourseSchema);
+const User = mongoose.model("User", UserSchema, "users");
+const Course = mongoose.model("Course", CourseSchema, "courses");
 
 module.exports.User = User;
 module.exports.Course = Course;

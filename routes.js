@@ -168,7 +168,7 @@ router.post("/users", [fnameValidator, lnameValidator, emailValidator, pwdValida
 
 //GET: /api/courses 200 --- All Course
 router.get("/courses", (req, res, next) => {
-    Course.find({})
+    Course.find({}).populate('user', ['firstName', 'lastName'])
                 .exec((err, courses) => {
                     if(err) return next(err);
                     res.json(courses);
@@ -179,7 +179,11 @@ router.get("/courses", (req, res, next) => {
 //GET: /api/courses/:id 201
 //Route that resturns a course based on the provided course ID
 router.get("/courses/:id", (req, res, next) => {
-     res.json(req.course);
+    //  res.json(req.course);
+     Course.findById(req.params.id).populate('user', ['firstName', 'lastName'])
+                .exec( (err, course) => {
+                    res.json(course);
+                });
 }); 
 
 
@@ -227,13 +231,12 @@ router.put("/courses/:id", authenticateUser, (req, res, next) => {
 
 //DELETE: /api/course/:id 200
 //Route that deletes courses
-router.delete("/courses/:id", (req, res, next) => {
+router.delete("/courses/:id", authenticateUser, (req, res, next) => {
     const currUser = req.currentUser.id;
     const courseUser = req.course.user;
 
     if (currUser == courseUser) {
-        req.course.remove((err) => {
-            //return no content
+        Course.findByIdAndRemove(req.params.id, (err) => {
             req.course.save( (err, course) => {
                 if(err) return next(err);
                 res.status(204);

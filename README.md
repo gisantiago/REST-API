@@ -11,3 +11,4 @@
 - if authenticated user tries to update/delete a course not owned by him/her, an error messsage will appaer and throw a status 403.
 
 ###### Course routes
+- Using Mongoose deep population to return only the firstName and lastName properties of the related user on the course model ---- routes.js ( lines: 171 and 183)
