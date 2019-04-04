@@ -49,7 +49,6 @@ const lnameValidator = check('lastName')
 
 //Email Validator
 const emailValidator = check('emailAddress', 'Please enter a valid email')
-    .isEmpty()
     .isEmail();
 
 //Password Validator
