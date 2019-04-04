@@ -49,10 +49,8 @@ const lnameValidator = check('lastName')
 
 //Email Validator
 const emailValidator = check('emailAddress', 'Please enter a valid email')
-    .not()
     .isEmpty()
-    .isEmail()
-    .normalizeEmail();
+    .isEmail();
 
 //Password Validator
 const pwdValidator = check('password')
@@ -142,18 +140,16 @@ router.get('/users', authenticateUser, (req, res) => {
 //Route for creating a user -- with fields validators
 router.post("/users", [fnameValidator, lnameValidator, emailValidator, pwdValidator], (req, res, next) => {
     const errors = validationResult(req);
-    const user = new User(req.body);
-    // Hash the new user's password.
-    user.password = bcryptjs.hashSync(user.password);
 
     if ( !errors.isEmpty() ) {
         const errorMessages = errors.array().map(error => error.msg);
         return res.status(400).json({ errors: errorMessages });
     }
-    // const user = req.body;
-    // users.push(user);
-    // return res.status(201).end();
-    user.save( (err, user) => {
+
+    const user = new User(req.body);
+    // Hash the new user's password.
+    user.password = bcryptjs.hashSync(user.password);
+    user.save( (err) => {
         if(err) return next(err);
         res.location("/");
         res.status(201);
@@ -189,7 +185,7 @@ router.get("/courses/:id", (req, res, next) => {
 
 //POST: /api/courses 201
 //Route for creating a course --- with validators for the title and description
-router.post("/courses", [titleValidator, dscpValidator], (req, res, next) => {
+router.post("/courses", authenticateUser, [titleValidator, dscpValidator], (req, res, next) => {
     const errors = validationResult(req);
     const course = new Course(req.body);
     if ( !errors.isEmpty() ) {
